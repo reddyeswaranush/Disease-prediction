@@ -1,6 +1,8 @@
-from flask import Blueprint, request, jsonify, render_template
+from flask import Blueprint, request, jsonify, render_template, send_file
 import csv
 import os
+import io
+from datetime import datetime
 
 from backend.utils.calculator import bayesian_survival
 from backend.utils.gemini_helper import generate_recommendations
@@ -159,3 +161,33 @@ def gemini_recommendations():
             "error": str(e),
             "recommendations": "Unable to generate recommendations. Please try again later."
         }), 500
+
+@disease_bp.route("/download-result", methods=["POST"])
+def download_result():
+    data = request.json
+
+    content = f"""
+Disease Probability Result
+==========================
+
+Disease Name        : {data.get('diseaseName', 'Custom Input')}
+Prior Probability   : {data.get('priorProbability')}
+Posterior Probability : {data.get('posteriorProbability')}
+Test Result         : {data.get('testResult')}
+
+Generated On        : {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}
+
+Disclaimer:
+This result is generated for educational purposes only.
+"""
+
+    buffer = io.BytesIO()
+    buffer.write(content.encode("utf-8"))
+    buffer.seek(0)
+
+    return send_file(
+        buffer,
+        as_attachment=True,
+        download_name="disease_probability_result.txt",
+        mimetype="text/plain"
+    )

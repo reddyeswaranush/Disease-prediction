@@ -178,6 +178,8 @@ function usePreset() {
         posteriorProbability: data.p_d_given_pos,
         testResult: 'positive'
       };
+
+      document.getElementById("downloadBtn").style.display = "inline-block";
       
       // Show recommendations container with button
       showRecommendationsContainer();
@@ -231,6 +233,8 @@ function calculateDisease() {
         posteriorProbability: data.p_d_given_result,
         testResult: data.test_result
       };
+
+      document.getElementById("downloadBtn").style.display = "inline-block";
       
       // Show recommendations container with button
       showRecommendationsContainer();
@@ -396,6 +400,29 @@ function formatMarkdownToHTML(text) {
   
   return html;
 }
+
+function downloadResult() {
+    fetch("/download-result", {
+        method: "POST",
+        headers: {
+            "Content-Type": "application/json"
+        },
+        body: JSON.stringify(lastCalculationData)
+    })
+    .then(response => response.blob())
+    .then(blob => {
+        const url = window.URL.createObjectURL(blob);
+        const a = document.createElement("a");
+        a.href = url;
+        a.download = "disease_probability_result.txt";
+        a.click();
+        window.URL.revokeObjectURL(url);
+    })
+    .catch(err => {
+        alert("Download failed: " + err);
+    });
+}
+
 
 // Attach reset logic after page loads
 window.addEventListener("DOMContentLoaded", attachResetOnInput);
